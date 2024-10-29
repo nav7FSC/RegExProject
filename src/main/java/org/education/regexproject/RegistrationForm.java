@@ -4,12 +4,20 @@ import javafx.application.Application;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * This class represents a registration form application built using JavaFX.
+ * It allows users to input their first name, last name, email, date of birth,
+ * and zip code with validation for each field. The user can submit their data
+ * if all validations pass.
+ */
 public class RegistrationForm extends Application {
 
     @FXML
@@ -19,11 +27,17 @@ public class RegistrationForm extends Application {
     @FXML
     private Button addButton;
 
+    /**
+     * Starts the JavaFX application.
+     *
+     * @param primaryStage the primary stage for this application
+     * @throws Exception if any error occurs during startup
+     */
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws Exception {
         // Create title label
         Label titleLabel = new Label("Registration Page");
-        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;");
+        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-padding: 10px;");
 
         // Create text fields
         firstNameField = new TextField();
@@ -51,7 +65,7 @@ public class RegistrationForm extends Application {
         // Create add button
         addButton = new Button("Add");
         addButton.setDisable(true);
-        // Set button style here
+        // Set button style
         addButton.setStyle(
                 "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
                         "-fx-text-fill: white; " +
@@ -59,11 +73,13 @@ public class RegistrationForm extends Application {
                         "-fx-background-radius: 20px; " +
                         "-fx-padding: 10px 20px;"
         );
+
+        // Add action handler
         addButton.setOnAction(event -> handleAddButtonClick());
 
         // Create layout
         VBox vbox = new VBox(10,
-                titleLabel, // Add title label to the layout
+                titleLabel,
                 firstNameField, firstNameError,
                 lastNameField, lastNameError,
                 emailField, emailError,
@@ -77,23 +93,37 @@ public class RegistrationForm extends Application {
         vbox.setStyle("-fx-alignment: center;");
 
         // Setting up scene with increased dimensions
-        Scene scene = new Scene(vbox, 450, 450);
+        Scene scene = new Scene(vbox, 500, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Registration Form");
         primaryStage.show();
 
-        // Add focus listeners for validation
+        // Add focus and text change listeners for validation
         addListeners();
     }
 
+    /**
+     * Adds listeners to the input fields to validate user input
+     * when the fields lose focus or when the zip code changes.
+     */
     private void addListeners() {
         firstNameField.focusedProperty().addListener((observable, oldValue, newValue) -> validateFirstName());
         lastNameField.focusedProperty().addListener((observable, oldValue, newValue) -> validateLastName());
         emailField.focusedProperty().addListener((observable, oldValue, newValue) -> validateEmail());
         dobField.focusedProperty().addListener((observable, oldValue, newValue) -> validateDOB());
         zipCodeField.focusedProperty().addListener((observable, oldValue, newValue) -> validateZipCode());
+
+        // Add a listener for text changes in zip code field
+        zipCodeField.textProperty().addListener((observable, oldValue, newValue) -> {
+            validateZipCode(); // Validate zip code
+            enableAddButton();  // Enable the add button based on current validations
+        });
     }
 
+    /**
+     * Validates the first name input for the registration form.
+     * The name must be alphabetic and between 2 and 25 characters long.
+     */
     private void validateFirstName() {
         String input = firstNameField.getText();
         if (input.matches("^[A-Za-z]{2,25}$")) {
@@ -104,6 +134,10 @@ public class RegistrationForm extends Application {
         enableAddButton();
     }
 
+    /**
+     * Validates the last name input for the registration form.
+     * The name must be alphabetic and between 2 and 25 characters long.
+     */
     private void validateLastName() {
         String input = lastNameField.getText();
         if (input.matches("^[A-Za-z]{2,25}$")) {
@@ -114,6 +148,10 @@ public class RegistrationForm extends Application {
         enableAddButton();
     }
 
+    /**
+     * Validates the email input for the registration form.
+     * The email must match the specified domain (farmingdale.edu).
+     */
     private void validateEmail() {
         String input = emailField.getText();
         if (input.matches("^[a-zA-Z0-9._%+-]+@farmingdale.edu$")) {
@@ -124,6 +162,10 @@ public class RegistrationForm extends Application {
         enableAddButton();
     }
 
+    /**
+     * Validates the date of birth input for the registration form.
+     * The date must follow the MM/DD/YYYY format and be a valid date.
+     */
     private void validateDOB() {
         String input = dobField.getText();
         if (input.matches("^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/(19|20)\\d\\d$")) {
@@ -134,6 +176,10 @@ public class RegistrationForm extends Application {
         enableAddButton();
     }
 
+    /**
+     * Validates the zip code input for the registration form.
+     * The zip code must consist of exactly 5 digits.
+     */
     private void validateZipCode() {
         String input = zipCodeField.getText();
         if (input.matches("^\\d{5}$")) {
@@ -141,25 +187,49 @@ public class RegistrationForm extends Application {
         } else {
             zipError.setText("Invalid Zip Code");
         }
-        enableAddButton();
     }
 
+    /**
+     * Enables or disables the add button based on the validity of the input fields.
+     * The button is enabled only if all error messages are empty.
+     */
     private void enableAddButton() {
         addButton.setDisable(
                 !firstNameError.getText().isEmpty() ||
                         !lastNameError.getText().isEmpty() ||
                         !emailError.getText().isEmpty() ||
                         !dobError.getText().isEmpty() ||
-                        !zipError.getText().isEmpty()
+                        !zipError.getText().isEmpty() ||
+                        zipCodeField.getText().length() != 5 // Ensure zip code has 5 digits
         );
     }
 
+    /**
+     * Handles the action when the add button is clicked.
+     * Displays an alert if registration is successful.
+     */
     @FXML
     private void handleAddButtonClick() {
-        System.out.println("Registration Successful!");
-        // Implement navigation to a new UI here if needed
+        // Check if the button is enabled before proceeding
+        if (!addButton.isDisabled()) {
+            // Create an alert for successful registration
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Registration Successful");
+            alert.setHeaderText(null);
+            alert.setContentText("You have successfully registered!");
+
+            // Show the alert and wait for the user to close it
+            alert.showAndWait();
+        } else {
+            System.out.println("Please fix the errors before submitting.");
+        }
     }
 
+    /**
+     * The main entry point for the JavaFX application.
+     *
+     * @param args command-line arguments passed to the application
+     */
     public static void main(String[] args) {
         launch(args);
     }
